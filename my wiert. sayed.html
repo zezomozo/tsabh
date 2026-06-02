@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>أورادي اليومية 🤲</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; min-height: 100vh; padding-bottom: 50px; -webkit-user-select: none; user-select: none; }
+        
+        .app-container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        h1 { text-align: center; color: #fbbf24; font-size: 30px; margin-bottom: 15px; text-shadow: 0 2px 10px rgba(251, 191, 36, 0.3); }
+
+        /* زراير الصلوات */
+        .prayer-nav { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; justify-content: center; position: sticky; top: 0; background: #1e293b; padding: 10px 0; z-index: 10; }
+        .prayer-btn { flex: 1 1 21%; padding: 12px 5px; border: none; color: #ffffff; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: 800; transition: all 0.3s; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .prayer-btn.active { transform: translateY(-3px) scale(1.05); box-shadow: 0 8px 15px rgba(0,0,0,0.5); border: 2px solid #ffffff; }
+        
+        .btn-fajr-sunnah { background: #3b82f6; } .btn-fajr { background: #f59e0b; } .btn-duha { background: #22c55e; } .btn-dhuhr { background: #ef4444; } .btn-asr { background: #a855f7; } .btn-maghrib { background: #ec4899; } .btn-isha { background: #06b6d4; } .btn-sleep { background: #6366f1; } .btn-tasbeeh { background: #f97316; }
+
+        /* كروت الأذكار */
+        .dhikr-card { background: rgba(255, 255, 255, 0.05); border-radius: 15px; margin-bottom: 10px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: 0.3s; }
+        .dhikr-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 20px; font-weight: 700; color: #e2e8f0; }
+        .dhikr-header span.dhikr-num { background: #334155; padding: 2px 10px; border-radius: 20px; font-size: 16px; color: #fbbf24; }
+        .dhikr-body { padding: 0 15px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s; }
+        .dhikr-card.open .dhikr-body { max-height: 2000px; padding: 0 15px 15px; }
+        .dhikr-card.open { border-color: rgba(251, 191, 36, 0.3); background: rgba(255, 255, 255, 0.08); }
+        .dhikr-card.done { border-color: rgba(74, 222, 128, 0.5); background: rgba(74, 222, 128, 0.05); }
+        .dhikr-card.done .dhikr-header { color: #4ade80; text-decoration: line-through; }
+
+        .dhikr-text { font-size: 26px; line-height: 1.8; color: #ffffff; text-align: center; margin-bottom: 20px; font-weight: 500; }
+        .quran-text { color: #fbbf24; font-weight: 700; font-size: 28px; text-shadow: 0 1px 5px rgba(251, 191, 36, 0.2); }
+        
+        /* عداد الأذكار */
+        .counter-area { display: flex; flex-direction: column; align-items: center; }
+        .counter-circle { width: 100px; height: 100px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 5px solid #fbbf24; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: transform 0.1s; -webkit-tap-highlight-color: transparent; font-family: inherit; outline: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 40px; font-weight: 900; color: #ffffff; }
+        .counter-circle:active { transform: scale(0.9); background: rgba(251, 191, 36, 0.3); }
+        .counter-circle.done-circle { border-color: #4ade80; background: rgba(74, 222, 128, 0.2); }
+
+        /* عداد التسابيح الحر (تحويله لرابط عشان يشتغل على الموبايل) */
+        .free-tasbeeh-view { display: none; }
+        .tasbeeh-item { background: rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 25px; margin-bottom: 20px; border: 1px solid rgba(251, 191, 36, 0.2); text-align: center; }
+        .tasbeeh-title { font-size: 24px; font-weight: 700; color: #fbbf24; margin-bottom: 5px; }
+        .tasbeeh-desc { font-size: 18px; color: #94a3b8; margin-bottom: 20px; }
+        .tasbeeh-count { font-size: 24px; font-weight: 700; color: #ffffff; margin-top: 10px; }
+        
+        .big-counter-link { display: flex; justify-content: center; align-items: center; width: 160px; height: 160px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 6px solid #fbbf24; box-shadow: 0 4px 10px rgba(0,0,0,0.3); text-decoration: none; color: white; font-size: 65px; font-weight: 900; margin: 0 auto; -webkit-tap-highlight-color: transparent; }
+        .big-counter-link:active { transform: scale(0.9); background: rgba(251, 191, 36, 0.3); }
+
+        .progress-bg { width: 100%; height: 15px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; margin-top: 15px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b); border-radius: 10px; transition: width 0.2s; width: 0%; }
+
+        .reset-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #94a3b8; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 16px; margin-top: 15px; font-family: inherit; font-weight: 700; transition: 0.3s; }
+        .reset-btn:active { background: #ef4444; color: white; border-color: #ef4444; }
+
+        .requests-section h3 { color: #fbbf24; font-size: 24px; margin-bottom: 10px; margin-top: 20px; }
+        .requests-section textarea { width: 100%; height: 80px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 15px; padding: 15px; color: #ffffff; font-size: 20px; resize: none; outline: none; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>🤲 ورد الرزق والرخاء</h1>
+        
+        <div class="prayer-nav" id="prayerNav">
+            <button class="prayer-btn btn-fajr-sunnah" onclick="switchPrayer('سنة الفجر', this)">سنة الفجر</button>
+            <button class="prayer-btn btn-fajr active" onclick="switchPrayer('الفجر', this)">الفجر</button>
+            <button class="prayer-btn btn-duha" onclick="switchPrayer('الضحى', this)">الضحى</button>
+            <button class="prayer-btn btn-dhuhr" onclick="switchPrayer('الظهر', this)">الظهر</button>
+            <button class="prayer-btn btn-asr" onclick="switchPrayer('العصر', this)">العصر</button>
+            <button class="prayer-btn btn-maghrib" onclick="switchPrayer('المغرب', this)">المغرب</button>
+            <button class="prayer-btn btn-isha" onclick="switchPrayer('العشاء', this)">العشاء</button>
+            <button class="prayer-btn btn-sleep" onclick="switchPrayer('النوم', this)">💤 النوم</button>
+            <button class="prayer-btn btn-tasbeeh" onclick="switchView('tasbeeh', this)">🔥 تسابيح</button>
+        </div>
+
+        <div id="adhkarView">
+            <div id="adhkarContainer"></div>
+            <div class="requests-section">
+                <h3>📝 طلباتي ودعواتي</h3>
+                <textarea id="myRequests" placeholder="اكتب طلباتك هنا... سيتم حفظها تلقائياً لك"></textarea>
+            </div>
+        </div>
+
+        <div id="tasbeehView" class="free-tasbeeh-view">
+            
+            <div class="tasbeeh-item">
+                <div class="tasbeeh-title">ورد الاستغفار (للرزق والرخاء)</div>
+                <div class="tasbeeh-desc">أستغفرُ الله العظيم الذي لا إله إلا هو الحي القيوم وأتوب إليه</div>
+                
+                <!-- استخدام رابط بدل زرار عشان الموبايل يرد فوراً -->
+                <a id="istighfarBtn" class="big-counter-link" href="javascript:void(0);" onclick="incrementFree('istighfar')">0</a>
+                
+                <div class="tasbeeh-count" id="istighfarCount">0 / 1000</div>
+                <div class="progress-bg">
+                    <div class="progress-fill" id="istighfarProgress"></div>
+                </div>
+                <button class="reset-btn" onclick="resetFree('istighfar')">تصفير العداد</button>
+            </div>
+
+            <div class="tasbeeh-item">
+                <div class="tasbeeh-title">الصلاة على النبي ﷺ</div>
+                <div class="tasbeeh-desc">اللهم صلِّ وسلم على نبينا محمد</div>
+                
+                <!-- استخدام رابط بدل زرار عشان الموبايل يرد فوراً -->
+                <a id="salawatBtn" class="big-counter-link" href="javascript:void(0);" onclick="incrementFree('salawat')">0</a>
+                
+                <div class="tasbeeh-count" id="salawatCount">0 / 1000</div>
+                <div class="progress-bg">
+                    <div class="progress-fill" id="salawatProgress"></div>
+                </div>
+                <button class="reset-btn" onclick="resetFree('salawat')">تصفير العداد</button>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playClick() {
+            try {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.value = 600; osc.type = 'sine';
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.1);
+            } catch(e) {}
+        }
+        function playComplete() {
+            try {
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.frequency.value = 900; osc.type = 'sine';
+                gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.5);
+            } catch(e) {}
+        }
+
+        const grandDua = "اللهم إني أسألك بأنك أنت الله الأحد الصمد، الذي لم يلد ولم يولد ولم يكن له كفواً أحد، الحنان المنان، بديع السماوات والأرض، يا ذا الجلال والإكرام، يا حي يا قيوم، لا إله إلا أنت سبحانك إني كنت من الظالمين.. اللهم إني أسألك من فضلك الواسع العظيم، أن ترزقني بيتاً مباركاً ملكاً لي، ومالاً وفيراً حلالاً طيباً يكفيني ويكفي أولادي وبناتي، وأن تغنيني بفضلك عمن سواك، وأن تؤمن روعاتنا، وتكفينا شر نوائب الدهر، وتجعل عيشتنا رغداً في طاعتك ورضاك. يا وهاب يا كريم";
+        const grandDuaSleep = "اللهم إني أسألك بأنك أنت الله الأحد الصمد، الذي لم يلد ولم يولد ولم يكن له كفواً أحد، المنان، بديع السماوات والأرض، يا ذا الجلال والإكرام، يا حي يا قيوم، لا إله إلا أنت سبحانك إني كنت من الظالمين... أسألك من فضلك الواسع العظيم، أن ترزقني بيتاً مباركاً ملكاً لي، ومالاً وفيراً حلالاً طيباً يكفيني ويكفي أولادي وبناتي، وأن تغنيني بفضلك عمن سواك، وأن تؤمن روعاتنا، وتكفينا شر نوائب الدهر، وتجعل عيشتنا رغداً في طاعتك ورضاك، وتأمر ملائكتك بحفظي وحفظ زوجتي وأولادي من كل شر وإيذاء وحسد، يا رحمن يا رحيم";
+
+        const ikhlas = "قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ";
+        const falaq = "قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۝ مِن شَرِّ مَا خَلَقَ ۝ وَمِن شَرِّ غَاسِقٍ إِذَا وَقَبَ ۝ وَمِن شَرِّ النَّفَّاثَاتِ فِي الْعُقَدِ ۝ وَمِن شَرِّ حَاسِدٍ إِذَا حَسَدَ";
+        const nas = "قُلْ أَعُوذُ بِرَبِّ النَّاسِ ۝ مَلِكِ النَّاسِ ۝ إِلَٰهِ النَّاسِ ۝ مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ ۝ الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ ۝ مِنَ الْجِنَّةِ وَالنَّاسِ";
+
+        const wirdData = {
+            "سنة الفجر": [ { text: "قراءة سورة الواقعة (بنية البركة وتيسير الرزق الحلال)", count: 1 } ],
+            "الفجر": [
+                { text: "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ", count: 3 },
+                { text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَلَا نَعْبُدُ إِلَّا إِيَّاهُ، لَهُ النِّعْمَةُ وَلَهُ الْفَضْلُ وَلَهُ الثَّنَاءُ الْحَسَنُ، لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ، لَا إِلَهَ إِلَّا اللَّهُ مُخْلِصِينَ لَهُ الدِّينَ وَلو كَرِهَ الْكَافِرُونَ", count: 1 },
+                { text: "سُبْحَانَ اللَّهِ", count: 33 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 33 },
+                { text: "اللَّهُ أَكْبَرُ", count: 33 },
+                { text: "تمام المئة: لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1 },
+                { text: "قراءة آية الكرسي", count: 1 },
+                { text: "قراءة سورة يس (بنية الفتح وتوسيع الرزق)", count: 1 },
+                { text: "سورة الإخلاص", count: 3, surah: ikhlas },
+                { text: "سورة الفلق", count: 3, surah: falaq },
+                { text: "سورة الناس", count: 3, surah: nas },
+                { text: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ", count: 3 },
+                { text: "حَسْبِيَ اللَّهُ لَا إِلَهَ إِلَّا هُوَ عَلَيْهِ تَوَكَّلْتُ وَهُوَ رَبُّ الْعَرْشِ الْعَظِيمِ", count: 7 },
+                { text: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دُنْيَا وَالْآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي، اللَّهُمَّ اسْتُرْ عَوْرَاتِي وَآمِنْ رَوْعَاتِي، اللَّهُمَّ احْفَظْنِي مِنْ بَيْنِ يَدَيَّ، وَمِنْ خَلْفِي، وَعَنْ يَمِينِي، وَعَنْ شِمَالِي، وَمِنْ فَوْقِي، وَأَعُوذُ بِعَظَمَتِكَ أَنْ أُغْتَالَ مِنْ تَحْتِي", count: 1 },
+                { text: grandDua, count: 7 }
+            ],
+            "الضحى": [
+                { text: "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ", count: 3 },
+                { text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", count: 1 },
+                { text: "سُبْحَانَ اللَّهِ", count: 33 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 33 },
+                { text: "اللَّهُ أَكْبَرُ", count: 33 },
+                { text: "تمام المئة: لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1 },
+                { text: "قراءة آية الكرسي", count: 1 },
+                { text: "سورة الإخلاص", count: 1, surah: ikhlas },
+                { text: "سورة الفلق", count: 1, surah: falaq },
+                { text: "سورة الناس", count: 1, surah: nas },
+                { text: grandDua, count: 7 }
+            ],
+            "الظهر": [
+                { text: "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ", count: 3 },
+                { text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", count: 1 },
+                { text: "سُبْحَانَ اللَّهِ", count: 33 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 33 },
+                { text: "اللَّهُ أَكْبَرُ", count: 33 },
+                { text: "تمام المئة: لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1 },
+                { text: "قراءة آية الكرسي", count: 1 },
+                { text: "سورة الإخلاص", count: 1, surah: ikhlas },
+                { text: "سورة الفلق", count: 1, surah: falaq },
+                { text: "سورة الناس", count: 1, surah: nas },
+                { text: grandDua, count: 7 }
+            ],
+            "العصر": [
+                { text: "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ", count: 3 },
+                { text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", count: 1 },
+                { text: "سُبْحَانَ اللَّهِ", count: 33 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 33 },
+                { text: "اللَّهُ أَكْبَرُ", count: 33 },
+                { text: "تمام المئة: لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1 },
+                { text: "قراءة آية الكرسي", count: 1 },
+                { text: "سورة الإخلاص", count: 1, surah: ikhlas },
+                { text: "سورة الفلق", count: 1, surah: falaq },
+                { text: "سورة الناس", count: 1, surah: nas },
+                { text: grandDua, count: 7 }
+            ],
+            "المغرب": [
+                { text: "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ", count: 3 },
+                { text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", count: 1 },
+                { text: "سُبْحَانَ اللَّهِ", count: 33 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 33 },
+                { text: "اللَّهُ أَكْبَرُ", count: 33 },
+                { text: "تمام المئة: لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1 },
+                { text: "قراءة آية الكرسي", count: 1 },
+                { text: "سورة الإخلاص", count: 3, surah: ikhlas },
+                { text: "سورة الفلق", count: 3, surah: falaq },
+                { text: "سورة الناس", count: 3, surah: nas },
+                { text: grandDua, count: 7 }
+            ],
+            "العشاء": [
+                { text: "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ", count: 3 },
+                { text: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ ذَا الْجَلَالِ وَالْإِكْرَامِ", count: 1 },
+                { text: "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ، اللَّهُمَّ لَا مَانِعَ لِمَا أَعْطَيْتَ، وَلَا مُعْطِيَ لِمَا مَنَعْتَ، وَلَا يَنْفَعُ ذَا الْجَدِّ مِنْكَ الْجَدُّ", count: 1 },
+                { text: "سُبْحَانَ اللَّهِ", count: 33 },
+                { text: "الْحَمْدُ لِلَّهِ", count: 33 },
+                { text: "اللَّهُ أَكْبَرُ", count: 33 },
+                { text: "تمام المئة: لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ", count: 1 },
+                { text: "قراءة آية الكرسي", count: 1 },
+                { text: "سورة الإخلاص", count: 1, surah: ikhlas },
+                { text: "سورة الفلق", count: 1, surah: falaq },
+                { text: "سورة الناس", count: 1, surah: nas },
+                { text: grandDua, count: 7 }
+            ],
+            "النوم": [
+                { text: "قراءة آية الكرسي (للحفظ)", count: 1 },
+                { text: "قراءة أواخر سورة البقرة كاملة (كفاية من كل شر)", count: 1 },
+                { text: grandDuaSleep, count: 7 }
+            ]
+        };
+
+        const container = document.getElementById('adhkarContainer');
+        const adhkarView = document.getElementById('adhkarView');
+        const tasbeehView = document.getElementById('tasbeehView');
+
+        function switchView(view, btnElement) {
+            document.querySelectorAll('.prayer-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            if(view === 'tasbeeh') {
+                adhkarView.style.display = 'none';
+                tasbeehView.style.display = 'block';
+            } else {
+                adhkarView.style.display = 'block';
+                tasbeehView.style.display = 'none';
+            }
+        }
+
+        function switchPrayer(prayerName, btnElement) {
+            switchView('adhkar', btnElement);
+            renderAdhkar(prayerName);
+        }
+
+        function renderAdhkar(prayerName) {
+            container.innerHTML = '';
+            const items = wirdData[prayerName];
+            items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'dhikr-card';
+                if(index === 0) card.classList.add('open');
+                
+                const isQuran = item.surah ? true : false;
+                const textClass = isQuran ? "dhikr-text quran-text" : "dhikr-text";
+                const displayText = item.surah ? item.surah : item.text;
+                const headerText = item.surah ? item.text : item.text.substring(0, 35)+"...";
+
+                card.innerHTML = `
+                    <div class="dhikr-header" onclick="toggleCard(this)">
+                        <span>${index + 1}. ${headerText}</span>
+                        <span class="dhikr-num">(${item.count}x)</span>
+                    </div>
+                    <div class="dhikr-body">
+                        <div class="${textClass}">${displayText}</div>
+                        <div class="counter-area">
+                            <button class="counter-circle" onclick="incrementLocalCounter(this, ${item.count}, this.closest('.dhikr-card'))">0</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleCard(headerEl) { headerEl.parentElement.classList.toggle('open'); }
+
+        function incrementLocalCounter(btn, target, cardEl) {
+            let current = parseInt(btn.textContent);
+            if (current < target) {
+                current++;
+                btn.textContent = current;
+                playClick();
+                if (current === target) {
+                    playComplete();
+                    btn.classList.add('done-circle');
+                    btn.textContent = "✓";
+                    cardEl.classList.add('done');
+                    setTimeout(() => {
+                        cardEl.classList.remove('open');
+                        const nextCard = cardEl.nextElementSibling;
+                        if(nextCard) { nextCard.classList.add('open'); nextCard.scrollIntoView({behavior: "smooth", block: "center"}); }
+                    }, 800);
+                }
+            }
+        }
+
+        // التسابيح الحر (تم وضع حماية عشان الذاكرة متعطلش الكود)
+        let istighfarNum = 0;
+        let salawatNum = 0;
+        try {
+            istighfarNum = parseInt(localStorage.getItem('ist_v6')) || 0;
+            salawatNum = parseInt(localStorage.getItem('sal_v6')) || 0;
+        } catch(e) {}
+
+        function updateFreeUI() {
+            document.getElementById('istighfarBtn').innerHTML = istighfarNum;
+            document.getElementById('istighfarCount').innerHTML = istighfarNum + " / 1000";
+            document.getElementById('istighfarProgress').style.width = (istighfarNum / 10) + "%";
+            
+            document.getElementById('salawatBtn').innerHTML = salawatNum;
+            document.getElementById('salawatCount').innerHTML = salawatNum + " / 1000";
+            document.getElementById('salawatProgress').style.width = (salawatNum / 10) + "%";
+        }
+
+        function incrementFree(type) {
+            if (type === 'istighfar' && istighfarNum < 1000) {
+                istighfarNum++;
+                try { localStorage.setItem('ist_v6', istighfarNum); } catch(e) {}
+                if(istighfarNum === 1000) playComplete();
+            } else if (type === 'salawat' && salawatNum < 1000) {
+                salawatNum++;
+                try { localStorage.setItem('sal_v6', salawatNum); } catch(e) {}
+                if(salawatNum === 1000) playComplete();
+            }
+            updateFreeUI();
+        }
+
+        function resetFree(type) {
+            if(type === 'istighfar') {
+                istighfarNum = 0;
+                try { localStorage.setItem('ist_v6', 0); } catch(e) {}
+            } else if(type === 'salawat') {
+                salawatNum = 0;
+                try { localStorage.setItem('sal_v6', 0); } catch(e) {}
+            }
+            updateFreeUI();
+        }
+
+        const myRequests = document.getElementById('myRequests');
+        try { myRequests.value = localStorage.getItem('myPrayerRequests') || ''; } catch(e) {}
+        myRequests.addEventListener('input', function() { try { localStorage.setItem('myPrayerRequests', this.value); } catch(e) {} });
+
+        renderAdhkar('الفجر');
+        updateFreeUI();
+
+    </script>
+</body>
+</html>
